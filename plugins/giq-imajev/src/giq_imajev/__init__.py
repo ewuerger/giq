@@ -16,7 +16,7 @@ from pathlib import Path
 from giq.paths import env_python
 from giq.plugin import API_VERSION, AdapterContext, Binary, Engine, Modality, Plugin
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 
 def _decide(ctx: AdapterContext):
