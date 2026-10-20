@@ -6,7 +6,7 @@
 
 imajev on its own interpreter (envs/imajev, torch + PEFT LoRA + a decision
 readout over a Qwen3.5 checkpoint) in a child process; POST /decide; the
-built-in imajev recipe.
+sandbox panel; the built-in imajev recipe.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from pathlib import Path
 
 from giq.paths import env_python
 from giq.plugin import API_VERSION, AdapterContext, Binary, Engine, Modality, Plugin
+from giq.plugins import curated_ui
 
 __version__ = "0.6.1"
 
@@ -61,6 +62,7 @@ def _imajev_plugin() -> Plugin:
         adapters={("imajev", "decide"): _decide},
         recipes=Path(__file__).parent / "recipes",
         routers=("giq_imajev.api:router",),
+        ui=curated_ui("giq-imajev"),
     )
 
 
