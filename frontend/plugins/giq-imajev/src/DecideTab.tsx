@@ -24,7 +24,7 @@ interface DecideResponse {
 }
 
 /* Typed classification: state + questions JSON plus 0–2 images, straight at
-   POST /decide (the Jev contract with photos). One flat section per question
+   POST /decide. One flat section per question
    in the result card, shaped by its type (AnswerCard): the picked option,
    score or verdict, probability bars, and the trained can't-tell as a
    footnote or an abstained note. */
@@ -63,7 +63,7 @@ export function DecideTab({ options, model, onModel }: PanelProps) {
         if (file1) form.append("image1", file1);
         return api.postForm<DecideResponse>(`/decide?model=${encodeURIComponent(model)}`, form, { signal });
       }
-      return runDecideJob(model, payload, [], { signal });
+      return postDecide(model, payload, { signal });
     });
   };
 
@@ -108,7 +108,7 @@ export function DecideTab({ options, model, onModel }: PanelProps) {
       {runner.started && (
         <sandbox.OutputCard
           busy={runner.busy}
-          error={runner.error ?? jsonError}
+          error={runner.error}
           status={
             runner.busy
               ? t("run.deciding")
@@ -136,19 +136,12 @@ export function DecideTab({ options, model, onModel }: PanelProps) {
   );
 }
 
-
-export async function runDecideJob(
+/* Without images the request goes as plain JSON; with them, as multipart
+   (above), so the browser never base64s a photo. */
+function postDecide(
   model: string,
   payload: { state?: unknown; questions: unknown },
-  images: string[],
   opts: { signal?: AbortSignal } = {},
 ): Promise<DecideResponse> {
-  return api.postJSON<DecideResponse>(
-    `/decide?model=${encodeURIComponent(model)}`,
-    {
-      ...payload,
-      ...Object.fromEntries(images.slice(0, 2).map((b64, i) => [`image${i}_b64`, b64])),
-    },
-    opts,
-  );
+  return api.postJSON<DecideResponse>(`/decide?model=${encodeURIComponent(model)}`, payload, opts);
 }

@@ -35,7 +35,17 @@
   tab-size: 2;
 }
 
-.pl-giq-imajev-json-hl { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.pl-giq-imajev-json-hl { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: var(--text-strong); }
+
+/* prism's token classes, coloured from the semantic tokens so both themes
+   follow the page. */
+.pl-giq-imajev-json-hl .token.property { color: var(--accent-ink); }
+.pl-giq-imajev-json-hl .token.string { color: var(--good); }
+.pl-giq-imajev-json-hl .token.number,
+.pl-giq-imajev-json-hl .token.boolean { color: var(--warning); }
+.pl-giq-imajev-json-hl .token.null { color: var(--critical); }
+.pl-giq-imajev-json-hl .token.punctuation,
+.pl-giq-imajev-json-hl .token.operator { color: var(--text-muted); }
 
 .pl-giq-imajev-json-hl > div { display: block; min-height: 1.5em; }
 

@@ -15,49 +15,19 @@ export interface JsonEditorProps {
   invalid?: boolean;
 }
 
-/* A JSON textarea with line numbers and syntax highlighting via
-   prism-react-renderer. The Highlight render is text only (no background,
-   no layout of its own): it sits under a transparent textarea in one
-   scroll-synced frame, so caret, selection and IME stay native. The theme
-   below is literal hex by necessity — prism themes are inline-style
-   objects, not CSS — matched once to the Nocturne dark/light ramps; the
-   frame, gutter and caret still follow tokens. Invalid JSON gets the
-   field-error style on the frame, never a popup. */
+/* A JSON textarea with syntax highlighting via prism-react-renderer. The
+   Highlight render is text only (no background, no layout of its own): it
+   sits under a transparent textarea in one frame, so caret, selection and
+   IME stay native. The theme is empty on purpose: prism then emits only its
+   `token <type>` classes, and JsonEditor.css colours those from the tokens,
+   so light/dark follows the page without a theme of its own. Invalid JSON
+   gets the field-error style on the frame, never a popup. */
 
-const DARK: PrismTheme = {
-  plain: { color: "#e8e6e3" },
-  styles: [
-    { types: ["property", "attr-name"], style: { color: "#8ecae6" } },
-    { types: ["string", "char"], style: { color: "#75ce8a" } },
-    { types: ["number", "boolean"], style: { color: "#e2ad4a" } },
-    { types: ["null", "nil"], style: { color: "#fc978f" } },
-    { types: ["punctuation", "operator"], style: { color: "#9a958e" } },
-  ],
-};
-
-const LIGHT: PrismTheme = {
-  plain: { color: "#1f2937" },
-  styles: [
-    { types: ["property", "attr-name"], style: { color: "#1d4ed8" } },
-    { types: ["string", "char"], style: { color: "#1b9246" } },
-    { types: ["number", "boolean"], style: { color: "#9e710e" } },
-    { types: ["null", "nil"], style: { color: "#c34f4b" } },
-    { types: ["punctuation", "operator"], style: { color: "#6b7280" } },
-  ],
-};
-
-const themeFor = (dark: boolean): PrismTheme => (dark ? DARK : LIGHT);
+const NO_THEME: PrismTheme = { plain: {}, styles: [] };
 
 export function JsonEditor({ id, value, onChange, rows = 8, invalid }: JsonEditorProps) {
   const { t } = useTranslation(NS);
   const [error, setError] = useState<string | null>(null);
-  const [dark, setDark] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      (document.documentElement.dataset.theme === "dark" ||
-        (document.documentElement.dataset.theme !== "light" &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches)),
-  );
   const check = (v: string) => {
     onChange(v);
     if (v.trim() === "") return setError(null);
@@ -71,7 +41,7 @@ export function JsonEditor({ id, value, onChange, rows = 8, invalid }: JsonEdito
   return (
     <div className={`pl-giq-imajev-json${invalid || error ? " pl-giq-imajev-json-invalid" : ""}`}>
       <div className="pl-giq-imajev-json-edit">
-        <Highlight theme={themeFor(dark)} language="json" code={value}>
+        <Highlight theme={NO_THEME} language="json" code={value}>
           {({ tokens, getLineProps, getTokenProps }) => (
             <pre className="pl-giq-imajev-json-hl" aria-hidden="true">
               {tokens.map((line, i) => {
@@ -114,13 +84,6 @@ export function JsonEditor({ id, value, onChange, rows = 8, invalid }: JsonEdito
           aria-invalid={invalid || !!error || undefined}
           aria-describedby={error ? `${id}-err` : undefined}
           onChange={(e) => check(e.target.value)}
-          onFocus={() =>
-            setDark(
-              document.documentElement.dataset.theme === "dark" ||
-                (document.documentElement.dataset.theme !== "light" &&
-                  window.matchMedia("(prefers-color-scheme: dark)").matches),
-            )
-          }
         />
       </div>
       {error && (

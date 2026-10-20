@@ -13,11 +13,10 @@ import {
 import { components, useFormat } from "@giq/plugin-ui";
 import { useTranslation } from "react-i18next";
 import { NS } from "./ns";
+import { noulVerdict, scoreLevels, sortedProbs, type DecideAnswer, type ScoreLevel } from "./shapes";
 import "./AnswerCard.css";
 
 const DASH = "\u2013";
-
-import type { DecideAnswer } from "./shapes";
 
 /* One symbol per answer type: the header tag names the type in words and
    carries its icon, so choice / score / noul (and multi) scan apart. */
@@ -28,9 +27,6 @@ export const TYPE_ICON: Record<string, PhosphorIcon> = {
   multi: ListChecksIcon,
 };
 
-
-import { noulVerdict, scoreLevels, sortedProbs } from "./shapes";
-import type { ScoreLevel } from "./shapes";
 
 /* One answer per question: the picked option, score or verdict up front, its
    distribution as shared progress bars, and the trained can't-tell as a
@@ -47,7 +43,9 @@ export function AnswerCard({ name, answer: a }: { name: string; answer: DecideAn
           {t(`decide.type.${a.type}`, { defaultValue: a.type })}
         </components.Tag>
       </div>
-      {a.type === "score" ? (
+      {a.abstained ? (
+        <Abstained />
+      ) : a.type === "score" ? (
         <ScoreBody a={a} />
       ) : a.type === "noul" ? (
         <NoulBody a={a} />
@@ -62,14 +60,6 @@ export function AnswerCard({ name, answer: a }: { name: string; answer: DecideAn
 
 function ChoiceBody({ a }: { a: DecideAnswer }) {
   const probs = sortedProbs(a);
-  if (a.abstained) {
-    return (
-      <>
-        <div className="pl-giq-imajev-answer-value">{DASH}</div>
-        <AbstainedNote />
-      </>
-    );
-  }
   return (
     <>
       <div className="pl-giq-imajev-answer-value">{a.choice ?? DASH}</div>
@@ -99,14 +89,6 @@ function ScoreBody({ a }: { a: DecideAnswer }) {
     (best, l) => (best == null || l.p > best.p ? l : best),
     undefined,
   );
-  if (a.abstained) {
-    return (
-      <>
-        <div className="pl-giq-imajev-answer-value">{DASH}</div>
-        <AbstainedNote />
-      </>
-    );
-  }
   return (
     <>
       <div className="pl-giq-imajev-answer-value">
@@ -131,14 +113,6 @@ function NoulBody({ a }: { a: DecideAnswer }) {
   const f = useFormat();
   const verdict = noulVerdict(a.noul);
   const yes = a.noul == null ? null : Math.min(1, Math.max(0, a.noul));
-  if (a.abstained) {
-    return (
-      <>
-        <div className="pl-giq-imajev-answer-value">{DASH}</div>
-        <AbstainedNote />
-      </>
-    );
-  }
   return (
     <>
       <div className="pl-giq-imajev-answer-value">{verdict ? t(`decide.${verdict}`) : DASH}</div>
@@ -175,14 +149,6 @@ function MultiBody({ a }: { a: DecideAnswer }) {
   const f = useFormat();
   const labels = a.labels ?? [];
   const probs = sortedProbs(a);
-  if (a.abstained) {
-    return (
-      <>
-        <div className="pl-giq-imajev-answer-value">{DASH}</div>
-        <AbstainedNote />
-      </>
-    );
-  }
   return (
     <>
       <div className="pl-giq-imajev-answer-value pl-giq-imajev-multi-value">
@@ -240,12 +206,16 @@ function Footnotes({ confidence, unknown }: { confidence?: number | null; unknow
   return <p className="hint">{parts.join(" · ")}</p>;
 }
 
-function AbstainedNote() {
+/* An abstention replaces the body: a dash where the verdict goes, and why. */
+function Abstained() {
   const { t } = useTranslation(NS);
   return (
-    <p className="warn pl-giq-imajev-abstain">
-      <components.Icon as={WarningIcon} size={14} />
-      <span>{t("decide.abstained")}</span>
-    </p>
+    <>
+      <div className="pl-giq-imajev-answer-value">{DASH}</div>
+      <p className="warn pl-giq-imajev-abstain">
+        <components.Icon as={WarningIcon} size={14} />
+        <span>{t("decide.abstained")}</span>
+      </p>
+    </>
   );
 }
