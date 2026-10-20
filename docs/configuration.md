@@ -151,7 +151,8 @@ more than one turns on continuous batching), `cache_type_k` and
 attention kernel), `reasoning` (`on`, `off`, `auto`, or `template` to let the
 chat template decide), `reasoning_budget`, `spec_type`,
 `chat_template_file` (a Jinja file under `GIQ_MODELS_DIR`, replacing the
-GGUF's embedded template), `alias`, `loop_guard`, `ready_timeout` (seconds a
+GGUF's embedded template; see
+[engines.md](engines.md#chat-templates)), `alias`, `loop_guard`, `ready_timeout` (seconds a
 start may take, default 300 — raise it for a big GGUF on a slow disk; a
 server that exits while starting fails at once, and its output is in
 `<state>/logs/llama-<model>.log`). vllm `params` — a VRAM budget (`kv_cache_memory`, preferred,
