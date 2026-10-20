@@ -20,7 +20,7 @@ from typing import Any
 from giq.paths import env_python
 from giq.plugin import API_VERSION, AdapterContext, Binary, Engine, Plugin
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 
 def _vllm(ctx: AdapterContext):
@@ -107,6 +107,12 @@ def _vllm_plugin() -> Plugin:
                 sweep=_vllm_sweep,
                 prepare=_vllm_prepare,
                 check=_vllm_check,
+                # vllm reserves its weights, the KV budget and its buffers at
+                # start and never grows past them; the recipe's figure is all
+                # of it, so a load needs little on top (the same 0.5 GB a
+                # resident reload gets). The scaled 2 GB kept a 29.7 GB recipe
+                # from ever loading on demand on a 32 GB card.
+                vram_margin=0.5,
                 # The context it serves is the recipe's max_model_len.
                 context=lambda params: params.max_model_len,
                 # No server-level switch: the chat template decides, and a caller
