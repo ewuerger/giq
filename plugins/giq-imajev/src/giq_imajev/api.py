@@ -11,6 +11,7 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from starlette.datastructures import UploadFile
 
 from giq.api.dependencies import get_orchestrator
 from giq.api.router import SYNC_WAIT_TIMEOUT_SECONDS
@@ -40,14 +41,14 @@ async def _decide_body(request: Request) -> tuple[dict, list[bytes]]:
     body = await read_body_capped(request, upload_limit())
     if request.headers.get("content-type", "").startswith("multipart/form-data"):
         form = await InMemoryMultipart(request.headers, body).parse()
-        raw = form.get("request")
-        if isinstance(raw, list):
-            raw = raw[0] if raw else None
-        if hasattr(raw, "read"):
-            upload = raw
-            raw = (await upload.read()).decode("utf-8", "replace")
-            await upload.close()
-        if not raw or not isinstance(raw, str):
+        # The parser's parts are starlette's UploadFile (fastapi's subclasses it).
+        part = form.get("request")
+        if isinstance(part, UploadFile):
+            raw = (await part.read()).decode("utf-8", "replace")
+            await part.close()
+        else:
+            raw = part or ""
+        if not raw:
             raise HTTPException(status_code=400, detail="multipart body needs a 'request' part")
         try:
             payload = json.loads(raw)
@@ -60,7 +61,7 @@ async def _decide_body(request: Request) -> tuple[dict, list[bytes]]:
         images = []
         for key in ("image0", "image1", "image", "files"):
             for upload in form.getlist(key):
-                if hasattr(upload, "read"):
+                if isinstance(upload, UploadFile):
                     images.append(await upload.read())
                     await upload.close()
         return payload, images
@@ -92,7 +93,7 @@ async def decide(
     model: str = Query(default="imajev-2b", description="decide recipe to run"),
     orch: Orchestrator = Depends(get_orchestrator),
 ) -> dict:
-    """Typed decisions over a record plus 0-2 images: Jev's contract, with photos.
+    """Typed decisions over a record plus 0-2 images.
 
     Send `{"state": {...}, "questions": {"queue": {"type": "choice", ...}}}`,
     as JSON (images as `image0_b64`/`image1_b64`) or as multipart `request`
@@ -111,12 +112,16 @@ async def decide(
         raise HTTPException(status_code=400, detail="payload needs a non-empty 'questions' object")
     if len(images) > 2:
         raise HTTPException(status_code=400, detail="at most 2 images per decide request")
+    # Each rotation is another forward per question, all on the queue's GPU.
+    rotations = payload.get("rotations", 1)
+    if not isinstance(rotations, int) or isinstance(rotations, bool) or not 1 <= rotations <= 4:
+        raise HTTPException(status_code=400, detail="'rotations' must be an integer 1-4")
     task = {
         "id": "decide-0",
         "state": payload.get("state", {}),
         "questions": payload["questions"],
         "images_b64": [base64.b64encode(data).decode() for data in images],
-        "rotations": payload.get("rotations", 1),
+        "rotations": rotations,
         "calibration": payload.get("calibration"),
     }
     job_id, _ = await orch.submit_job(JobRequest(modality="decide", model=model, tasks=[task]))

@@ -194,7 +194,7 @@ class DepthResult(BaseModel):
 
 
 class DecideAnswer(BaseModel):
-    """One typed answer: Jev's shape plus the trained unknown."""
+    """One typed answer: the pick and its probabilities, plus the trained unknown."""
 
     type: str
     choice: str | None = None

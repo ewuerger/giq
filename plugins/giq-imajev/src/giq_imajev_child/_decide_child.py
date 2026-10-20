@@ -13,15 +13,15 @@ nothing is ever fetched.
 Per task: compile the payload (``to_request_with_plan``), score one forward
 per question per rotation (``TorchDecision.candidate_logits``), average
 rotations (``combine_rotations``), apply the adapter's shipped temperature
-(``TemperatureCalibrator``), and return Jev's answer shapes via
+(``TemperatureCalibrator``), and return the typed answers via
 ``to_response``. A task carries ``state`` (record, string or dict),
 ``questions`` (1-8, noul/choice/score/multi), ``images_b64`` (0-2) and an
-optional ``rotations`` int (default 1; 4 is the shipped benchmark config);
+optional ``rotations`` int (1-4, default 1; 4 is the shipped benchmark config);
 ``calibration`` selects the artifact (default ``calibration.json``).
 
 Wire protocol: see giq_child (``run_ipc_child_loop``). This module is a
 top-level package importing no giq: the imajev interpreter carries
-torch/PEFT, never giq's venv.
+torch/PEFT and imajev's ``vision_decision``, never giq's venv.
 """
 
 import os
@@ -40,11 +40,15 @@ from giq_child import (  # noqa: E402
 # At most 2 images per task. State size is enforced by the Request contract
 # (compact UTF-8 JSON, MAX_STATE_BYTES) during to_request_with_plan.
 MAX_IMAGES = 2
+# Each rotation is one more forward per question; 4 is the benchmark config
+# and averages every option order of a 4-way choice, so more buys nothing.
+MAX_ROTATIONS = 4
 
 
 def _load(base: str, adapter: str):
     import torch
-    from torch_decision import TorchDecision
+
+    from giq_imajev_child._torch_decision import TorchDecision
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     engine = TorchDecision(base, device, dtype=torch.bfloat16, max_length=4096)
@@ -52,7 +56,7 @@ def _load(base: str, adapter: str):
         from peft import PeftModel
 
         engine.model = PeftModel.from_pretrained(engine.model, adapter).eval()
-        engine.enable_readout(adapter, trainable=False)
+        engine.enable_readout(adapter)
     return engine
 
 
@@ -102,7 +106,9 @@ def _run(models, task: dict) -> dict:
         raise ValueError(f"at most {MAX_IMAGES} images per task, got {len(blobs)}")
     images = _decode_images(blobs)
     payload = {"state": state, "questions": task["questions"]}
-    rotations = max(1, int(task.get("rotations", 1)))
+    rotations = int(task.get("rotations", 1))
+    if not 1 <= rotations <= MAX_ROTATIONS:
+        raise ValueError(f"rotations must be 1-{MAX_ROTATIONS}, got {rotations}")
     request, plan = to_request_with_plan(payload, request_id=str(task.get("id", "decide")))
     calibrator = _calibrator(adapter, task.get("calibration"))
 

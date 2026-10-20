@@ -303,8 +303,10 @@ Licences are part of the choice: only Small is Apache-2.0, so Base and Large
 
 A record plus 0-2 photos and 1-8 typed questions in, calibrated
 probabilities out, through imajev-2b (Qwen3.5-2B plus a rank-16 LoRA and a
-255-code decision readout; Apache-2.0): Jev's question shapes (`choice`,
-`noul`, `score`, `multi`) over your own record, each answer with a
+255-code decision readout; Apache-2.0): typed questions (`choice`,
+`noul` for yes/no, `score`, `multi`) over your own record, in the request
+and response shapes of TypeSafe's Jev API plus images (imajev is an
+independent model, not affiliated with Jev). Each answer comes with a
 probability per option plus `unknown_probability` (the trained *can't tell*)
 and `abstained`. Act above a threshold you measured on your own cases; send
 abstentions and low-confidence answers to a person.
@@ -327,7 +329,7 @@ curl -s -X POST localhost:8084/run?wait=true -H 'Content-Type: application/json'
 ```
 
 Query parameters: `model` (`imajev-2b`, the default and only registered one).
-`rotations` (1 default; 4 averages four option orders, about 3x the latency)
+`rotations` (1-4, default 1; 4 averages four option orders, about 3x the latency)
 and `calibration` (artifact name, default `calibration.json`) ride in the
 payload. Limits: 128 KB state, 4096 tokens, 0-2 images (JPEG/PNG/WebP, 20 MB
 and 20 Mpixel each). Sleepy model: loads on demand, evictable; 6.0 GB
