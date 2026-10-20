@@ -9,9 +9,8 @@
 # plus multi expanded server-side); each answer comes with probabilities, a
 # trained unknown mass and an abstention flag. Probed on an RTX 4070 12 GB:
 # text-only ticket 790 ms / 140 tokens, photo+record 1.1 s / 224 tokens,
-# 4.25 GiB torch-allocated at peak; the recipe figure below adds the CUDA
-# context the allocator does not see. Sleepy model: loads on demand,
-# evictable. The cautious tier: highest precision when it acts, automates
+# 4.25 GiB torch-allocated at peak (the card's figure is below). Sleepy
+# model: loads on demand, evictable. The cautious tier: highest precision when it acts, automates
 # fewer decisions than the 4b sibling (which has no recipe yet).
 name: imajev-2b
 label: imajev 2B Decide
@@ -32,9 +31,9 @@ weights:
       format: safetensors
       licence: apache-2.0
 vram:
-  # Torch-allocated peak on an RTX 4070 12 GB, text-only and photo+record
-  # (4.24-4.25 GiB); 6.0 GB covers the CUDA context nvidia-smi sees on top,
-  # still unmeasured at the card: re-measure with nvidia-smi while resident.
-  gb: 6.0
-  measured: false
+  # Measured on an RTX 5060 Ti with nvidia-smi: 4.5 GiB resident after
+  # loading, 4.5 GiB after photo+record requests and a batch of 4 (the
+  # allocator's own peak is 4.25 GiB, the rest is the CUDA context).
+  gb: 5.0
+  measured: true
 max_batch: 4

@@ -332,9 +332,8 @@ Query parameters: `model` (`imajev-2b`, the default and only registered one).
 `rotations` (1-4, default 1; 4 averages four option orders, about 3x the latency)
 and `calibration` (artifact name, default `calibration.json`) ride in the
 payload. Limits: 128 KB state, 4096 tokens, 0-2 images (JPEG/PNG/WebP, 20 MB
-and 20 Mpixel each). Sleepy model: loads on demand, evictable; 6.0 GB
-estimate (4.25 GiB torch-allocated peak on an RTX 4070 plus CUDA context;
-re-measure with nvidia-smi while resident before claiming measured).
+and 20 Mpixel each). Sleepy model: loads on demand, evictable; 5.0 GB
+(4.5 GiB measured at the card, CUDA context included).
 
 ## Weights
 
