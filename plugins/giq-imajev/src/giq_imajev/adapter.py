@@ -2,16 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Decide worker: typed photo+record decisions (imajev, Jev contract + images).
+"""Decide worker: typed photo+record decisions (imajev).
 
 The child (``_decide_child``) loads the base Qwen3.5 checkpoint plus the
 PEFT LoRA and the decision readout the recipe names, with the hub
 disabled so nothing is ever fetched. Per task it compiles the state's
 questions (``vision_decision.jev_api``), scores one forward per question per
-rotation (``torch_decision.TorchDecision.candidate_logits``), averages
+rotation (``_torch_decision.TorchDecision.candidate_logits``), averages
 rotations (``vision_decision.scoring.combine_rotations``), applies the
-shipped temperature (``vision_decision.calibration``), and returns Jev's
-answer shapes plus ``unknown_probability`` / ``abstained``.
+shipped temperature (``vision_decision.calibration``), and returns the typed
+answers plus ``unknown_probability`` / ``abstained``.
 
 Sleepy model: loads on demand, evictable. Runs on the imajev
 interpreter, like the vllm engine's own interpreter: the child imports only
@@ -70,19 +70,15 @@ class DecideAdapter(SubprocessAdapter):
 
     def _spawn_env(self) -> dict[str, str]:
         env = super()._spawn_env()
-        # The imajev checkout (TorchDecision + scoring) rides on PYTHONPATH:
-        # GIQ_IMAJEV_REPO, else the /projects checkout this was built for.
-        # The plugin's own child package and the giq_child protocol travel
-        # the same way, so the child imports no giq.
+        # The imajev interpreter has imajev (vision_decision) installed but not
+        # giq: the plugin's child package and the giq_child protocol travel on
+        # PYTHONPATH, so the child imports no giq.
         import giq_child
 
-        repo = os.environ.get("GIQ_IMAJEV_REPO", "/projects/imajev")
         path = os.pathsep.join(
             [
                 str(Path(__file__).resolve().parents[1]),
                 str(Path(giq_child.__file__).resolve().parent.parent),
-                os.path.join(repo, "src"),
-                os.path.join(repo, "scripts"),
             ]
         )
         env["PYTHONPATH"] = path + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")

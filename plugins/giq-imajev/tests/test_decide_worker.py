@@ -62,7 +62,7 @@ def decide_recipe(tmp_path, monkeypatch):
         "  format: safetensors\n"
         "  licence: apache-2.0\n"
         "  parts:\n"
-        "    base: {path: /projects/models/Qwen3.5-2B, format: safetensors, licence: apache-2.0}\n"
+        "    base: {path: Qwen-Qwen3.5-2B, format: safetensors, licence: apache-2.0}\n"
         "vram: {gb: 6.0}\n"
         "max_batch: 4\n"
     )
@@ -123,7 +123,7 @@ def test_operator_recipe_shape(tmp_path):
         "  licence: apache-2.0\n"
         "  parts:\n"
         "    base:\n"
-        "      path: Qwen-Qwen2.5-2B\n"
+        "      path: Qwen-Qwen3.5-2B\n"
         "      source: hf:Qwen/Qwen3.5-2B\n"
         "      revision: 15852e8c16360a2fea060d615a32b45270f8a8fc\n"
         "      format: safetensors\n"

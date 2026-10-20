@@ -118,7 +118,7 @@
       "recipes": [
         "imajev-2b"
       ],
-      "needs": "its own interpreter, set up once: cd envs/imajev && uv sync; plus the imajev checkout (GIQ_IMAJEV_REPO)"
+      "needs": "its own interpreter, set up once: cd envs/imajev && uv sync"
     }
   ]
 }

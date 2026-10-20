@@ -77,6 +77,10 @@ known-first-party = ["giq", "giq_child", "giq_vllm", "giq_sdcpp", "giq_speech", 
 # the whole `make check` target rather than warning.
 python-version = "3.11"
 
+[tool.ty.analysis]
+# The decide child runs on envs/imajev, which has these and giq's venv does not.
+allowed-unresolved-imports = ["vision_decision.**", "peft"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 # Core's suite, and each curated plugin's under plugins/<name>/tests; the

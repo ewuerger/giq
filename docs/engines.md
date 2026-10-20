@@ -31,8 +31,8 @@ model in the catalog names what executes it: `python` (giq's own venv — the
 audio stack, Kokoro, both OCR models and depth) and `vllm` (`envs/vllm`, the
 second LLM engine, [below](#vllm)); `GIQ_VLLM_PYTHON` points elsewhere.
 The decide child (giq-imajev) runs on its own interpreter, `imajev`
-(`envs/imajev`, torch + PEFT; `GIQ_IMAJEV_PYTHON` points elsewhere and
-`GIQ_IMAJEV_REPO` at the imajev checkout it reuses).
+(`envs/imajev`, torch + PEFT + imajev at a pinned commit;
+`GIQ_IMAJEV_PYTHON` points elsewhere).
 
 ## Engine names
 
